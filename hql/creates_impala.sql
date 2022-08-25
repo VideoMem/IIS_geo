@@ -97,5 +97,26 @@ SELECT count(hits) as hits, `dayofweek`, canal, host FROM
 CREATE VIEW IF NOT EXISTS d_dl_views.iis_geo_accesos_extranjero AS
 SELECT * FROM d_dl_tables.iis_geo_accesos where country != 'Argentina';
 
-
+-- DROP VIEW d_dl_views.iis_geo_accesos_sospechosos
+CREATE VIEW IF NOT EXISTS d_dl_views.iis_geo_accesos_sospechosos AS
+SELECT DISTINCT
+    acc.client_id as client_id
+    , acc.ts as local_ts
+    , ext.ts as foreign_ts
+    , acc.country as origen_local
+    , ext.country as origen_extranjero
+    , acc.latitud as latitud_local
+    , acc.longitud as longitud_local
+    , acc.accuracy as accuracy_local
+    , ext.latitud as latitud_extranjero
+    , ext.longitud as longitud_extranjero
+    , ext.accuracy as accuracy_extranjero
+FROM d_dl_tables.iis_geo_accesos acc
+INNER JOIN d_dl_views.iis_geo_accesos_extranjero ext
+    ON acc.country = 'Argentina'
+    AND acc.client_id = ext.client_id
+    AND acc.`day` = ext.`day`
+    AND acc.`month` = ext.`month`
+    AND from_timestamp(acc.ts, 'yyyy') = from_timestamp(ext.ts, 'yyyy')
+ORDER BY acc.ts DESC;
 
